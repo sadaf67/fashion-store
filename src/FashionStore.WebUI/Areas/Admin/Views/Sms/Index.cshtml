@@ -1,0 +1,92 @@
+@using FashionStore.Domain.Entities
+@model IEnumerable<SmsLog>
+@{
+    ViewData["Title"] = "پنل پیامک";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-4 mb-4">
+    <!-- ─── ارسال پیامک ─────────────────────────────────────────── -->
+    <div class="col-lg-6">
+        <div class="admin-table-card p-4">
+            <h5 style="color:var(--blue-deep);margin-bottom:1.5rem">📱 ارسال پیامک</h5>
+            <form asp-action="Send" method="post">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">شماره‌های مقصد</label>
+                    <textarea name="phones" class="form-control" rows="4"
+                              placeholder="هر شماره در یک خط یا جدا شده با کاما&#10;09123456789&#10;09987654321" required></textarea>
+                    <small style="color:var(--text-light)">هر شماره در یک خط یا جدا شده با ویرگول</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">متن پیام</label>
+                    <textarea name="message" class="form-control" rows="4" maxlength="160"
+                              placeholder="متن پیامک را بنویسید..." required></textarea>
+                </div>
+                <button class="btn-blue w-100" type="submit">📤 ارسال پیامک</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── ارسال به همه کاربران ─────────────────────────────────── -->
+    <div class="col-lg-6">
+        <div class="admin-table-card p-4">
+            <h5 style="color:var(--blue-deep);margin-bottom:1.5rem">📢 ارسال انبوه به همه کاربران</h5>
+            <div class="mb-3" style="background:rgba(231,76,60,0.08);border-radius:10px;padding:1rem;border:1px solid rgba(231,76,60,0.2)">
+                <small style="color:#c0392b">⚠️ این پیامک برای تمام کاربران فعال سایت ارسال می‌شود</small>
+            </div>
+            <form asp-action="SendToAll" method="post">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">متن پیام انبوه</label>
+                    <textarea name="message" class="form-control" rows="5"
+                              placeholder="متن تبلیغاتی یا اطلاع‌رسانی..." required></textarea>
+                </div>
+                <button class="btn-primary-custom w-100" type="submit"
+                        onclick="return confirm('آیا مطمئنید؟ این پیامک به همه کاربران ارسال می‌شود!')">
+                    🚀 ارسال به همه کاربران
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ─── لاگ پیامک‌ها ──────────────────────────────────────────────────── -->
+<div class="admin-table-card">
+    <div class="card-header">
+        <h5>📋 تاریخچه پیامک‌ها</h5>
+        <span style="font-size:0.85rem;color:var(--text-light)">۱۰۰ پیامک اخیر</span>
+    </div>
+    <div style="overflow-x:auto">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>شماره</th>
+                    <th>متن</th>
+                    <th>نوع</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td dir="ltr">@log.PhoneNumber</td>
+                        <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@log.Message</td>
+                        <td><span class="status-badge status-paid">@log.Type</span></td>
+                        <td>
+                            @if (log.IsSuccess)
+                            { <span class="status-badge status-delivered">✅ ارسال شد</span> }
+                            else
+                            { <span class="status-badge status-cancelled">❌ خطا</span> }
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-light)">@log.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5" class="text-center py-4" style="color:var(--text-light)">هنوز پیامکی ارسال نشده</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

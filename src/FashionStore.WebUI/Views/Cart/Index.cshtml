@@ -1,0 +1,40 @@
+@using FashionStore.Domain.Entities
+@model Cart
+@{
+    ViewData["Title"] = "سبد خرید";
+    var total = Model.Items.Sum(i => ((i.Product?.DiscountedPrice ?? i.Product?.Price) ?? 0) * i.Quantity);
+    var addresses = ViewBag.Addresses as IEnumerable<Address> ?? [];
+    var zones = ViewBag.DeliveryZones as IEnumerable<DeliveryZone> ?? [];
+}
+<section class="page-hero compact"><div class="container"><span class="eyebrow">تکمیل سفارش</span><h1>سبد خرید شما</h1><p>پیش از پرداخت، اندازه، رنگ و تعداد را یک‌بار بررسی کنید.</p></div></section>
+<main class="container commerce-page py-5">
+@if (!Model.Items.Any()) {
+  <div class="empty-state"><div class="empty-icon">🛍️</div><h2>سبد خرید خالی است</h2><p>محصولات تازه و منتخب را ببینید و استایل خودتان را بسازید.</p><a class="btn-blue" asp-controller="Shop" asp-action="Index">رفتن به فروشگاه</a></div>
+} else {
+<div class="row g-4">
+ <div class="col-lg-8"><div class="checkout-card">
+ @foreach (var item in Model.Items) { var image = item.Product?.Images?.FirstOrDefault(x=>x.IsPrimary)?.ImageUrl ?? item.Product?.Images?.FirstOrDefault()?.ImageUrl;
+  <article class="cart-line" id="item-@item.Id">
+   <div class="cart-image">@if(image != null){<img src="@image" alt="@item.Product?.Name"/>}else{<span>👗</span>}</div>
+   <div class="cart-info"><h3>@item.Product?.Name</h3><p>@item.ProductVariant?.Color @item.ProductVariant?.Size</p><span>@item.Quantity عدد</span></div>
+   <strong>@((((item.Product?.DiscountedPrice ?? item.Product?.Price) ?? 0) * item.Quantity).ToString("N0")) تومان</strong>
+   <button class="icon-danger" type="button" onclick="removeCartItem(@item.Id)" aria-label="حذف">×</button>
+  </article> }
+ </div></div>
+ <div class="col-lg-4"><aside class="checkout-card sticky-summary"><h2>خلاصه سفارش</h2><div class="summary-row"><span>جمع کالاها</span><strong id="cartTotal">@total.ToString("N0") تومان</strong></div>
+  <div class="discount-box"><label for="discountCode">کد تخفیف</label><div class="input-group"><input id="discountCode" class="form-control" placeholder="مثلاً WELCOME"/><button type="button" class="btn-outline-brand" onclick="applyDiscount()">اعمال</button></div><small id="discountMessage"></small></div>
+  @if(User.Identity?.IsAuthenticated == true) {
+   <form asp-action="Checkout" method="post" class="mt-4"><input type="hidden" name="discountId" id="discountId"/>
+    <label class="form-label">آدرس تحویل</label><select name="addressId" class="form-select" required><option value="">انتخاب آدرس</option>@foreach(var a in addresses){<option value="@a.Id">@a.City، @a.Street، @a.Detail</option>}</select>
+    <label class="form-label mt-3">روش ارسال</label><select name="deliveryZoneId" class="form-select" required><option value="">انتخاب روش</option>@foreach(var z in zones.Where(x=>x.IsActive)){<option value="@z.Id">@z.Name — @z.DeliveryFee.ToString("N0") تومان</option>}</select>
+    @if(!addresses.Any()){<div class="notice mt-3">برای ثبت سفارش ابتدا یک آدرس در پروفایل خود ثبت کنید.</div>}
+    <button class="btn-blue w-100 mt-4" type="submit" disabled="@(!addresses.Any())">ثبت سفارش و ادامه پرداخت</button>
+   </form>
+  } else { <a class="btn-blue w-100 text-center mt-4" asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Cart">ورود و ادامه خرید</a> }
+ </aside></div>
+</div>}
+</main>
+@section Scripts {<script>
+async function removeCartItem(id){ if(!confirm('این محصول از سبد حذف شود؟'))return; const f=new FormData();f.append('itemId',id);const r=await fetch('/Cart/Remove',{method:'POST',body:f});if(r.ok)location.reload();}
+async function applyDiscount(){const f=new FormData();f.append('code',document.getElementById('discountCode').value);f.append('orderAmount','@total');const r=await fetch('/Cart/ApplyDiscount',{method:'POST',body:f});const d=await r.json();const m=document.getElementById('discountMessage');m.textContent=d.message;m.className=d.success?'text-success':'text-danger';if(d.success)document.getElementById('discountId').value=d.discountId;}
+</script>}

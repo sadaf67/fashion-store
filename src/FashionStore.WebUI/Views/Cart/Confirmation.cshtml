@@ -1,0 +1,4 @@
+@using FashionStore.Domain.Entities
+@model Order
+@{ViewData["Title"]="سفارش ثبت شد";}
+<main class="container py-5"><div class="success-panel"><div class="success-mark">✓</div><span class="eyebrow">پرداخت و سفارش</span><h1>سفارش شما ثبت شد</h1><p>شماره پیگیری داخلی: <strong dir="ltr">@Model.OrderNumber</strong></p><div class="order-total"><span>مبلغ نهایی</span><strong>@Model.FinalAmount.ToString("N0") تومان</strong></div><p class="text-muted">وضعیت سفارش از بخش پروفایل قابل پیگیری است.</p><div class="d-flex gap-2 justify-content-center"><a class="btn-blue" asp-controller="Account" asp-action="Profile">پیگیری سفارش</a><a class="btn-outline-brand" asp-controller="Shop" asp-action="Index">ادامه خرید</a></div></div></main>

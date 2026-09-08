@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " | " : "")@(ViewBag.Settings?.SiteName ?? "فروشگاه مد")</title>
+    <!-- فونت فارسی -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <!-- Bootstrap RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS اصلی -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+<div class="announcement-bar">
+    <div class="container"><span>ارسال رایگان برای خریدهای بالای ۲ میلیون تومان</span><span class="announcement-sep">•</span><span>۷ روز ضمانت بازگشت</span></div>
+</div>
+
+<!-- ─── Navbar ─────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+            @if (!string.IsNullOrEmpty(ViewBag.Settings?.Logo as string))
+            {
+                <img src="@ViewBag.Settings.Logo" height="40" alt="لوگو" class="me-2">
+            }
+            <span class="brand-mark">E</span><span>@(ViewBag.Settings?.SiteName ?? "الگانت")</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <i class="fas fa-bars text-white"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">خانه</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Shop" asp-action="Index">فروشگاه</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Shop" asp-action="Index" asp-route-sort="newest">جدیدترین‌ها</a></li>
+            </ul>
+            <!-- جستجو -->
+            <form class="d-flex me-3" asp-controller="Shop" asp-action="Index" method="get">
+                <div class="input-group" style="width:240px">
+                    <input class="form-control form-control-sm" type="search" name="search" placeholder="جستجو...">
+                    <button class="btn btn-sm" style="background:var(--gold);color:var(--blue-deep)" type="submit"><i class="fas fa-search"></i></button>
+                </div>
+            </form>
+            <ul class="navbar-nav align-items-center gap-2">
+                <li class="nav-item">
+                    <a class="nav-link cart-btn" asp-controller="Cart" asp-action="Index">
+                        <i class="fa-solid fa-bag-shopping"></i><span class="visually-hidden">سبد خرید</span><span class="cart-badge" id="cartCount">0</span>
+                    </a>
+                </li>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index" style="color:var(--gold-light)!important">⚙️ مدیریت</a>
+                        </li>
+                    }
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">👤 @User.Identity.Name</a>
+                        <ul class="dropdown-menu dropdown-menu-start">
+                            <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">پروفایل من</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button class="dropdown-item text-danger" type="submit">خروج</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">ورود</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Register" style="background:rgba(255,255,255,0.15);border-radius:8px">ثبت نام</a></li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show m-0" role="alert" style="border-radius:0;border:none;border-bottom:3px solid #27ae60">
+        ✅ @TempData["Success"] <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show m-0" role="alert" style="border-radius:0">
+        ❌ @TempData["Error"] <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@RenderBody()
+
+<!-- ─── Footer ─────────────────────────────────────────────────────────── -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h5>درباره ما</h5>
+                <p style="font-size:0.9rem;color:rgba(255,255,255,0.7)">@(ViewBag.Settings?.AboutText ?? "فروشگاه آنلاین پوشاک با بهترین کیفیت")</p>
+                <div class="mt-3 d-flex gap-3">
+                    @if (!string.IsNullOrEmpty(ViewBag.Settings?.InstagramUrl as string))
+                    {
+                        <a href="@ViewBag.Settings.InstagramUrl" target="_blank" style="font-size:1.5rem;color:var(--gold)"><i class="fab fa-instagram"></i></a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.Settings?.TelegramUrl as string))
+                    {
+                        <a href="@ViewBag.Settings.TelegramUrl" target="_blank" style="font-size:1.5rem;color:var(--gold)"><i class="fab fa-telegram"></i></a>
+                    }
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h5>دسترسی سریع</h5>
+                <a asp-controller="Home" asp-action="Index">صفحه اصلی</a>
+                <a asp-controller="Shop" asp-action="Index">فروشگاه</a>
+                <a asp-controller="Cart" asp-action="Index">سبد خرید</a>
+                <a asp-controller="Account" asp-action="Profile">پروفایل</a>
+            </div>
+            <div class="col-md-5 mb-4">
+                <h5>تماس با ما</h5>
+                @if (!string.IsNullOrEmpty(ViewBag.Settings?.ContactPhone as string))
+                {
+                    <p><i class="fas fa-phone me-2" style="color:var(--gold)"></i> @ViewBag.Settings.ContactPhone</p>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.Settings?.ContactEmail as string))
+                {
+                    <p><i class="fas fa-envelope me-2" style="color:var(--gold)"></i> @ViewBag.Settings.ContactEmail</p>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.Settings?.Address as string))
+                {
+                    <p><i class="fas fa-map-marker-alt me-2" style="color:var(--gold)"></i> @ViewBag.Settings.Address</p>
+                }
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© @DateTime.Now.Year تمام حقوق محفوظ است | @(ViewBag.Settings?.SiteName ?? "فروشگاه مد")</p>
+        </div>
+    </div>
+</footer>
+
+<nav class="mobile-dock" aria-label="ناوبری موبایل">
+    <a asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house"></i><span>خانه</span></a>
+    <a asp-controller="Shop" asp-action="Index"><i class="fa-solid fa-compass"></i><span>فروشگاه</span></a>
+    <a asp-controller="Cart" asp-action="Index"><i class="fa-solid fa-bag-shopping"></i><span>سبد</span></a>
+    <a asp-controller="Account" asp-action="Profile"><i class="fa-regular fa-user"></i><span>حساب</span></a>
+</nav>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

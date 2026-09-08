@@ -1,0 +1,159 @@
+@using FashionStore.Domain.Entities
+@model IEnumerable<Product>
+@{
+    ViewData["Title"] = "فروشگاه";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div style="background:var(--cream);padding:2rem 0;margin-bottom:0">
+    <div class="container">
+        <h2 style="color:var(--blue-deep)">🛍️ فروشگاه</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">خانه</a></li>
+                <li class="breadcrumb-item active">فروشگاه</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div style="padding:2rem 0">
+    <div class="container">
+        <div class="row g-4">
+            <!-- ─── Sidebar فیلتر ──────────────────────────────── -->
+            <div class="col-lg-3">
+                <div class="filter-sidebar">
+                    <h5 style="color:var(--blue-deep);margin-bottom:1.5rem;font-size:1rem">🔍 فیلتر محصولات</h5>
+
+                    <!-- دسته‌بندی -->
+                    <div class="filter-section">
+                        <h6>دسته‌بندی</h6>
+                        <a href="@Url.Action("Index")" class="d-block mb-2 @(ViewBag.SelectedCategory == null ? "fw-bold" : "")"
+                           style="color:var(--blue-dark)">همه محصولات</a>
+                        @if (ViewBag.Categories != null)
+                        {
+                            @foreach (var cat in ViewBag.Categories)
+                            {
+                                <a href="@Url.Action("Index", new { categoryId = cat.Id })"
+                                   class="d-block mb-2 @(ViewBag.SelectedCategory == cat.Id ? "fw-bold" : "")"
+                                   style="color:var(--blue-dark)">@cat.Name</a>
+                            }
+                        }
+                    </div>
+
+                    <!-- مرتب‌سازی -->
+                    <div class="filter-section">
+                        <h6>مرتب‌سازی</h6>
+                        <form method="get">
+                            @if (ViewBag.SelectedCategory != null)
+                            {
+                                <input type="hidden" name="categoryId" value="@ViewBag.SelectedCategory">
+                            }
+                            @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+                            {
+                                <input type="hidden" name="search" value="@ViewBag.Search">
+                            }
+                            <select name="sort" class="form-control" onchange="this.form.submit()">
+                                <option value="">پیش‌فرض</option>
+                                <option value="newest">جدیدترین</option>
+                                <option value="price_asc">ارزان‌ترین</option>
+                                <option value="price_desc">گران‌ترین</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── لیست محصولات ───────────────────────────────── -->
+            <div class="col-lg-9">
+                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+                {
+                    <div class="mb-3" style="color:var(--text-mid)">
+                        نتایج جستجو برای: <strong style="color:var(--blue-deep)">@ViewBag.Search</strong>
+                        — @Model.Count() محصول
+                    </div>
+                }
+
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5" style="color:var(--text-light)">
+                        <div style="font-size:4rem">🔍</div>
+                        <h4 class="mt-3">محصولی یافت نشد</h4>
+                        <a asp-action="Index" class="btn-blue mt-3 d-inline-block">مشاهده همه</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var p in Model)
+                        {
+                            var primaryImage = p.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? p.Images?.FirstOrDefault()?.ImageUrl;
+                            var hasDiscount = p.DiscountedPrice.HasValue && p.DiscountedPrice < p.Price;
+                            <div class="col-6 col-md-4 fade-in">
+                                <div class="product-card">
+                                    <div class="product-img-wrapper">
+                                        @if (!string.IsNullOrEmpty(primaryImage))
+                                        {
+                                            <img src="@primaryImage" alt="@p.Name">
+                                        }
+                                        else
+                                        {
+                                            <div style="width:100%;height:100%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:3rem">👗</div>
+                                        }
+                                        <div class="product-badges">
+                                            @if (hasDiscount)
+                                            {
+                                                var pct = (int)((1 - p.DiscountedPrice!.Value / p.Price) * 100);
+                                                <span class="badge-discount">@pct%</span>
+                                            }
+                                            @if (p.IsTryOnEnabled) { <span class="badge-tryon">📷 پرو</span> }
+                                        </div>
+                                        <div class="product-actions">
+                                            <button class="action-btn" onclick="quickAdd(@p.Id)">🛒</button>
+                                            <a asp-controller="Shop" asp-action="Detail" asp-route-id="@p.Id" class="action-btn">👁</a>
+                                        </div>
+                                    </div>
+                                    <div class="product-body">
+                                        @if (!string.IsNullOrEmpty(p.Brand)) { <div class="brand">@p.Brand</div> }
+                                        <h5>@p.Name</h5>
+                                        <div class="product-price mt-2">
+                                            @if (hasDiscount)
+                                            {
+                                                <span class="price-current">@p.DiscountedPrice!.Value.ToString("N0") <small class="price-unit">تومان</small></span>
+                                                <span class="price-original">@p.Price.ToString("N0")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="price-current">@p.Price.ToString("N0") <small class="price-unit">تومان</small></span>
+                                            }
+                                        </div>
+                                        <a asp-action="Detail" asp-route-id="@p.Id" class="btn-blue w-100 mt-3 text-center" style="display:block">جزئیات</a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+async function quickAdd(productId) {
+    const form = new FormData();
+    form.append('productId', productId);
+    form.append('quantity', 1);
+    const res = await fetch('/Cart/Add', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById('cartCount').textContent = data.cartCount;
+        showToast(data.message, 'success');
+    }
+}
+const observer = new IntersectionObserver(entries =>
+    entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')), { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+}

@@ -1,0 +1,4 @@
+@using FashionStore.Domain.Entities
+@model Product
+@{ViewData["Title"]="ویرایش محصول";Layout="~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";}
+<h1 class="h3 fw-bold mb-4">ویرایش @Model.Name</h1><form method="post" enctype="multipart/form-data" class="card border-0 shadow-sm p-4"><input asp-for="Id" type="hidden"/><partial name="_Form" model="Model"/></form>

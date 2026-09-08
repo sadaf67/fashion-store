@@ -1,0 +1,205 @@
+@using FashionStore.Domain.Entities
+@model IEnumerable<Product>
+@{
+    ViewData["Title"] = "صفحه اصلی";
+    var settings = ViewBag.Settings as FashionStore.Domain.Entities.SiteSettings;
+}
+
+<!-- ─── Hero Section ────────────────────────────────────────────────────── -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1>@(settings?.HeroTitle ?? "جدیدترین مدهای روز")</h1>
+                <p>@(settings?.HeroSubtitle ?? "با بهترین کیفیت و قیمت مناسب، پوشاک روز دنیا را تجربه کنید")</p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a asp-controller="Shop" asp-action="Index" class="btn-primary-custom">🛍️ مشاهده فروشگاه</a>
+                    <a asp-controller="Shop" asp-action="Index" asp-route-sort="newest" class="btn-outline-custom">✨ جدیدترین‌ها</a>
+                </div>
+                <div class="mt-4 d-flex gap-4" style="color:var(--blue-light)">
+                    <div><strong style="color:var(--gold);font-size:1.5rem">+500</strong><br><small>محصول</small></div>
+                    <div><strong style="color:var(--gold);font-size:1.5rem">+200</strong><br><small>برند</small></div>
+                    <div><strong style="color:var(--gold);font-size:1.5rem">%100</strong><br><small>اصل بودن</small></div>
+                </div>
+            </div>
+            <div class="col-lg-6 mt-4 mt-lg-0 text-center">
+                @if (!string.IsNullOrEmpty(settings?.HeroImageUrl))
+                {
+                    <img src="@settings.HeroImageUrl" class="hero-image" alt="Hero">
+                }
+                else
+                {
+                    <div style="background:rgba(255,255,255,0.1);border-radius:20px;height:420px;display:flex;align-items:center;justify-content:center">
+                        <div style="text-align:center;color:rgba(255,255,255,0.5)">
+                            <div style="font-size:5rem">👗</div>
+                            <p>تصویر hero را از پنل مدیریت بارگذاری کنید</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="trust-strip" aria-label="مزایای فروشگاه">
+    <div class="container trust-grid">
+        <div><i class="fa-solid fa-gem"></i><span><strong>تضمین اصالت</strong><small>انتخاب مطمئن از برندهای معتبر</small></span></div>
+        <div><i class="fa-solid fa-arrow-rotate-left"></i><span><strong>بازگشت آسان</strong><small>تا ۷ روز پس از تحویل</small></span></div>
+        <div><i class="fa-solid fa-camera"></i><span><strong>پرو مجازی</strong><small>قبل از خرید روی دوربین امتحان کنید</small></span></div>
+        <div><i class="fa-solid fa-headset"></i><span><strong>پشتیبانی واقعی</strong><small>همراه شما در تمام مراحل خرید</small></span></div>
+    </div>
+</section>
+
+<!-- ─── دسته‌بندی‌ها ─────────────────────────────────────────────────────── -->
+@if (ViewBag.Categories != null)
+{
+    <section class="category-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>دسته‌بندی‌ها</h2>
+                <div class="divider"></div>
+                <p>محصولات خود را بر اساس دسته‌بندی انتخاب کنید</p>
+            </div>
+            <div class="row g-3">
+                @foreach (var cat in ViewBag.Categories)
+                {
+                    <div class="col-6 col-md-3 fade-in">
+                        <a asp-controller="Shop" asp-action="Index" asp-route-categoryId="@cat.Id" class="d-block">
+                            <div class="category-card">
+                                @if (!string.IsNullOrEmpty((string?)cat.ImageUrl))
+                                {
+                                    <img src="@cat.ImageUrl" alt="@cat.Name">
+                                }
+                                else
+                                {
+                                    <div style="width:100%;height:100%;background:linear-gradient(135deg,var(--blue-dark),var(--blue-deep));display:flex;align-items:center;justify-content:center;font-size:3rem">👗</div>
+                                }
+                                <div class="overlay">
+                                    <h3>@cat.Name</h3>
+                                    <span>مشاهده محصولات ←</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- ─── محصولات ویژه ─────────────────────────────────────────────────────── -->
+<section class="editorial-banner">
+    <div class="container"><div class="editorial-inner"><div><span class="eyebrow">Virtual fitting room</span><h2>قبل از خرید، استایل را روی خودت ببین</h2><p>با پرو مجازی دوربین‌محور، انتخاب آگاهانه‌تر و خرید مطمئن‌تری داشته باش.</p><a asp-controller="Shop" asp-action="Index" class="btn-primary-custom">محصولات دارای پرو مجازی</a></div><div class="editorial-shape"><span>TRY</span><small>ON</small></div></div></div>
+</section>
+<section class="products-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>محصولات ویژه</h2>
+            <div class="divider"></div>
+            <p>انتخاب‌های برتر ما برای شما</p>
+        </div>
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5" style="color:var(--text-light)">
+                <div style="font-size:4rem">🛍️</div>
+                <h4 class="mt-3">هنوز محصولی اضافه نشده</h4>
+                <p>از پنل مدیریت محصولات را اضافه کنید</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var p in Model)
+                {
+                    var primaryImage = p.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? p.Images?.FirstOrDefault()?.ImageUrl;
+                    var hasDiscount = p.DiscountedPrice.HasValue && p.DiscountedPrice < p.Price;
+                    <div class="col-6 col-md-4 col-lg-3 fade-in">
+                        <div class="product-card">
+                            <div class="product-img-wrapper">
+                                @if (!string.IsNullOrEmpty(primaryImage))
+                                {
+                                    <img src="@primaryImage" alt="@p.Name">
+                                }
+                                else
+                                {
+                                    <div style="width:100%;height:100%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:3rem">👗</div>
+                                }
+                                <div class="product-badges">
+                                    @if (hasDiscount)
+                                    {
+                                        var pct = (int)((1 - p.DiscountedPrice!.Value / p.Price) * 100);
+                                        <span class="badge-discount">@pct% تخفیف</span>
+                                    }
+                                    @if (p.IsTryOnEnabled) { <span class="badge-tryon">📷 پرو</span> }
+                                </div>
+                                <div class="product-actions">
+                                    <button class="action-btn" onclick="quickAdd(@p.Id)" title="افزودن به سبد">🛒</button>
+                                    <a asp-controller="Shop" asp-action="Detail" asp-route-id="@p.Id" class="action-btn">👁</a>
+                                </div>
+                            </div>
+                            <div class="product-body">
+                                @if (!string.IsNullOrEmpty(p.Brand)) { <div class="brand">@p.Brand</div> }
+                                <h5>@p.Name</h5>
+                                <div class="product-price mt-2">
+                                    @if (hasDiscount)
+                                    {
+                                        <span class="price-current">@p.DiscountedPrice!.Value.ToString("N0") <small class="price-unit">تومان</small></span>
+                                        <span class="price-original">@p.Price.ToString("N0")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="price-current">@p.Price.ToString("N0") <small class="price-unit">تومان</small></span>
+                                    }
+                                </div>
+                                <a asp-controller="Shop" asp-action="Detail" asp-route-id="@p.Id"
+                                   class="btn-blue w-100 mt-3 text-center" style="display:block">مشاهده جزئیات</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="text-center mt-5">
+                <a asp-controller="Shop" asp-action="Index" class="btn-primary-custom">مشاهده همه محصولات ←</a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ─── مزایا ───────────────────────────────────────────────────────────── -->
+<section style="padding:4rem 0;background:var(--cream)">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-6 col-md-3"><div style="font-size:2.5rem;margin-bottom:1rem">🚀</div><h5 style="color:var(--blue-deep)">ارسال سریع</h5><p style="color:var(--text-mid);font-size:0.9rem">تحویل در کمترین زمان ممکن</p></div>
+            <div class="col-6 col-md-3"><div style="font-size:2.5rem;margin-bottom:1rem">📷</div><h5 style="color:var(--blue-deep)">پرو آنلاین</h5><p style="color:var(--text-mid);font-size:0.9rem">قبل از خرید لباس را امتحان کنید</p></div>
+            <div class="col-6 col-md-3"><div style="font-size:2.5rem;margin-bottom:1rem">💳</div><h5 style="color:var(--blue-deep)">پرداخت امن</h5><p style="color:var(--text-mid);font-size:0.9rem">پرداخت با درگاه‌های معتبر</p></div>
+            <div class="col-6 col-md-3"><div style="font-size:2.5rem;margin-bottom:1rem">↩️</div><h5 style="color:var(--blue-deep)">بازگشت کالا</h5><p style="color:var(--text-mid);font-size:0.9rem">۷ روز ضمانت مرجوعی</p></div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+<script>
+async function quickAdd(productId) {
+    try {
+        const form = new FormData();
+        form.append('productId', productId);
+        form.append('quantity', 1);
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const res = await fetch('/Cart/Add', {
+            method: 'POST',
+            headers: token ? { 'RequestVerificationToken': token } : {},
+            body: form
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('cartCount').textContent = data.cartCount;
+            showToast(data.message, 'success');
+        }
+    } catch(e) { showToast('خطا در ارتباط', 'error'); }
+}
+// Fade-in on scroll
+const observer = new IntersectionObserver(entries =>
+    entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')), { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+}

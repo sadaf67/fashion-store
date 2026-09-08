@@ -1,0 +1,130 @@
+@using FashionStore.Domain.Entities
+@using FashionStore.Domain.Enums
+@model IEnumerable<Discount>
+@{
+    ViewData["Title"] = "کدهای تخفیف";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 style="color:var(--blue-deep)">🎫 مدیریت کدهای تخفیف</h4>
+    <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#createModal">
+        + کد جدید
+    </button>
+</div>
+
+<!-- ─── لیست کدها ─────────────────────────────────────────────────────── -->
+<div class="admin-table-card">
+    <div style="overflow-x:auto">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>کد تخفیف</th>
+                    <th>نوع</th>
+                    <th>مقدار</th>
+                    <th>استفاده شده</th>
+                    <th>انقضا</th>
+                    <th>وضعیت</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model)
+                {
+                    <tr>
+                        <td><strong style="color:var(--blue-deep);font-family:monospace">@d.Code</strong></td>
+                        <td>@(d.Type == DiscountType.Percentage ? "درصدی" : "مقداری")</td>
+                        <td>
+                            @if (d.Type == DiscountType.Percentage)
+                            { <span>@d.Value%</span> }
+                            else
+                            { <span>@d.Value.ToString("N0") تومان</span> }
+                        </td>
+                        <td>@d.UsedCount / @(d.UsageLimit?.ToString() ?? "∞")</td>
+                        <td style="font-size:0.85rem">@d.EndDate.ToString("yyyy/MM/dd")</td>
+                        <td>
+                            @if (d.IsActive && d.EndDate >= DateTime.UtcNow)
+                            { <span class="status-badge status-delivered">فعال</span> }
+                            else
+                            { <span class="status-badge status-cancelled">غیرفعال</span> }
+                        </td>
+                        <td>
+                            <form asp-action="Toggle" asp-route-id="@d.Id" method="post" style="display:inline">
+                                <button class="btn btn-sm" style="background:var(--blue-light);color:white;border:none;border-radius:6px" type="submit">
+                                    @(d.IsActive ? "غیرفعال" : "فعال")
+                                </button>
+                            </form>
+                            <form asp-action="Delete" asp-route-id="@d.Id" method="post" style="display:inline">
+                                <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('حذف شود؟')">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="7" class="text-center py-4" style="color:var(--text-light)">کد تخفیفی ثبت نشده</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ─── Modal ایجاد کد ──────────────────────────────────────────────────── -->
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:16px">
+            <div class="modal-header" style="background:var(--blue-deep);color:white;border-radius:16px 16px 0 0">
+                <h5 class="modal-title">🎫 کد تخفیف جدید</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Create" method="post">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">کد تخفیف</label>
+                        <input name="Code" class="form-control" placeholder="مثلاً: SUMMER30" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">توضیح</label>
+                        <input name="Description" class="form-control" placeholder="توضیح اختیاری">
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">نوع تخفیف</label>
+                            <select name="Type" class="form-control">
+                                <option value="1">درصدی (%)</option>
+                                <option value="2">مقداری (تومان)</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">مقدار</label>
+                            <input name="Value" type="number" class="form-control" placeholder="30" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">تاریخ شروع</label>
+                            <input name="StartDate" type="date" class="form-control" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">تاریخ انقضا</label>
+                            <input name="EndDate" type="date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">محدودیت تعداد</label>
+                            <input name="UsageLimit" type="number" class="form-control" placeholder="خالی = نامحدود">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">حداقل مبلغ (تومان)</label>
+                            <input name="MinOrderAmount" type="number" class="form-control" placeholder="اختیاری">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary-custom">ذخیره کد تخفیف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

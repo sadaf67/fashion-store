@@ -1,0 +1,176 @@
+@using FashionStore.Application.DTOs
+@model DashboardStatsDto
+@{
+    ViewData["Title"] = "داشبورد";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- ─── Stat Cards ─────────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="stat-card gold">
+            <div class="stat-icon gold">💰</div>
+            <div class="stat-info">
+                <div class="label">درآمد کل</div>
+                <div class="value">@Model.TotalRevenue.ToString("N0")</div>
+                <small style="color:var(--text-light)">تومان</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card blue">
+            <div class="stat-icon blue">📦</div>
+            <div class="stat-info">
+                <div class="label">کل سفارشات</div>
+                <div class="value">@Model.TotalOrders</div>
+                <small style="color:var(--blue-dark)">امروز: @Model.TodayOrders</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card green">
+            <div class="stat-icon green">👗</div>
+            <div class="stat-info">
+                <div class="label">محصولات</div>
+                <div class="value">@Model.TotalProducts</div>
+                <small style="color:#e74c3c">@Model.LowStockProducts کم موجود</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card red">
+            <div class="stat-icon red">👥</div>
+            <div class="stat-info">
+                <div class="label">کاربران</div>
+                <div class="value">@Model.TotalUsers</div>
+                <small style="color:var(--text-light)">ثبت نام شده</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── نمودارها ─────────────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <!-- نمودار درآمد هفتگی -->
+    <div class="col-lg-8">
+        <div class="admin-table-card p-3">
+            <div class="card-header">
+                <h5>📈 درآمد ۷ روز گذشته</h5>
+                <span style="font-size:0.85rem;color:var(--text-light)">درآمد روزانه (تومان)</span>
+            </div>
+            <div style="padding:1rem;height:280px">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- نمودار وضعیت سفارشات -->
+    <div class="col-lg-4">
+        <div class="admin-table-card p-3" style="height:100%">
+            <div class="card-header">
+                <h5>🥧 وضعیت سفارشات</h5>
+            </div>
+            <div style="padding:1rem;height:250px;display:flex;align-items:center;justify-content:center">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── سفارشات اخیر ─────────────────────────────────────────────────────── -->
+<div class="admin-table-card">
+    <div class="card-header">
+        <h5>🕐 آخرین سفارشات</h5>
+        <a asp-area="Admin" asp-controller="Orders" asp-action="Index"
+           style="font-size:0.85rem;color:var(--blue-dark)">مشاهده همه ←</a>
+    </div>
+    <div style="overflow-x:auto">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>شماره سفارش</th>
+                    <th>مشتری</th>
+                    <th>مبلغ</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.RecentOrders)
+                {
+                    <tr>
+                        <td><strong>@order.OrderNumber</strong></td>
+                        <td>@order.CustomerName</td>
+                        <td><strong>@order.FinalAmount.ToString("N0")</strong> تومان</td>
+                        <td>
+                            <span class="status-badge status-@order.Status.ToLower()">
+                                @order.Status
+                            </span>
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-light)">@order.CreatedAt.ToString("yyyy/MM/dd")</td>
+                        <td>
+                            <a asp-area="Admin" asp-controller="Orders" asp-action="Detail"
+                               asp-route-id="@order.OrderNumber" style="color:var(--blue-dark)">جزئیات</a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.RecentOrders.Any())
+                {
+                    <tr><td colspan="6" class="text-center py-4" style="color:var(--text-light)">سفارشی ثبت نشده</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// ─── نمودار درآمد هفتگی ────────────────────────────────────────────────
+const revenueData = {
+    labels: [@Html.Raw(string.Join(",", Model.WeeklyRevenue.Select(r => $"'{r.Date}'")))],
+    datasets: [{
+        label: 'درآمد (تومان)',
+        data: [@string.Join(",", Model.WeeklyRevenue.Select(r => r.Amount))],
+        backgroundColor: 'rgba(107,163,190,0.2)',
+        borderColor: '#4A8099',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#C9A96E',
+        pointRadius: 5
+    }]
+};
+new Chart(document.getElementById('revenueChart'), {
+    type: 'line',
+    data: revenueData,
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// ─── نمودار وضعیت سفارشات ─────────────────────────────────────────────
+const statusData = {
+    labels: [@Html.Raw(string.Join(",", Model.OrderStatusChart.Select(s => $"'{s.Status}'")))],
+    datasets: [{
+        data: [@string.Join(",", Model.OrderStatusChart.Select(s => s.Count))],
+        backgroundColor: ['#FFF3CD', '#D1ECF1', '#CCE5FF', '#D4EDDA', '#c3e6cb', '#F8D7DA'],
+        borderColor: ['#856404', '#0c5460', '#004085', '#155724', '#155724', '#721c24'],
+        borderWidth: 2
+    }]
+};
+new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: statusData,
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn' } } } },
+        cutout: '65%'
+    }
+});
+</script>
+}

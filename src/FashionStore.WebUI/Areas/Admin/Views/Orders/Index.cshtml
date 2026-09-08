@@ -1,0 +1,5 @@
+@using FashionStore.Domain.Entities
+@using FashionStore.Domain.Enums
+@model IEnumerable<Order>
+@{ViewData["Title"]="سفارش‌ها";Layout="~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";}
+<h1 class="h3 fw-bold">سفارش‌ها</h1><div class="d-flex flex-wrap gap-2 my-3"><a class="btn btn-sm btn-outline-secondary" asp-action="Index">همه</a>@foreach(var s in Enum.GetValues<OrderStatus>()){<a class="btn btn-sm btn-outline-secondary" asp-action="Index" asp-route-status="@s">@s</a>}</div><div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>شماره</th><th>مشتری</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th></tr></thead><tbody>@foreach(var o in Model){<tr><td><a asp-action="Detail" asp-route-id="@o.Id" dir="ltr">@o.OrderNumber</a></td><td>@o.User?.FullName</td><td>@o.FinalAmount.ToString("N0")</td><td>@o.Status</td><td>@o.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</td></tr>}</tbody></table></div></div>

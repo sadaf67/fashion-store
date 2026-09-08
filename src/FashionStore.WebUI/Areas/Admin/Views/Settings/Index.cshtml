@@ -1,0 +1,132 @@
+@using FashionStore.Domain.Entities
+@model SiteSettings
+@{
+    ViewData["Title"] = "تنظیمات سایت";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<form asp-action="Save" method="post" enctype="multipart/form-data">
+    <div class="row g-4">
+        <!-- ─── اطلاعات اصلی ──────────────────────────────────── -->
+        <div class="col-lg-8">
+            <div class="admin-table-card p-4 mb-4">
+                <h5 style="color:var(--blue-deep);margin-bottom:1.5rem">🏠 اطلاعات اصلی سایت</h5>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">نام سایت</label>
+                    <input asp-for="SiteName" class="form-control" placeholder="فروشگاه مد" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">متن Hero (عنوان)</label>
+                    <input asp-for="HeroTitle" class="form-control" placeholder="جدیدترین مدهای روز">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">متن Hero (زیرعنوان)</label>
+                    <input asp-for="HeroSubtitle" class="form-control" placeholder="با بهترین کیفیت و قیمت مناسب">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">درباره ما</label>
+                    <textarea asp-for="AboutText" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+
+            <div class="admin-table-card p-4 mb-4">
+                <h5 style="color:var(--blue-deep);margin-bottom:1.5rem">📞 اطلاعات تماس</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">تلفن</label>
+                        <input asp-for="ContactPhone" class="form-control" dir="ltr">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">ایمیل</label>
+                        <input asp-for="ContactEmail" class="form-control" dir="ltr">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">آدرس</label>
+                    <input asp-for="Address" class="form-control">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">اینستاگرام</label>
+                        <input asp-for="InstagramUrl" class="form-control" dir="ltr" placeholder="https://instagram.com/...">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">تلگرام</label>
+                        <input asp-for="TelegramUrl" class="form-control" dir="ltr" placeholder="https://t.me/...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-table-card p-4">
+                <h5 style="color:var(--blue-deep);margin-bottom:1.5rem">📱 تنظیمات پیامک</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">API Key پیامک</label>
+                        <input asp-for="SmsApiKey" class="form-control" dir="ltr" placeholder="کلید API سرویس پیامک">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">خط ارسال</label>
+                        <input asp-for="SmsSender" class="form-control" dir="ltr" placeholder="خط پیامک">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── تصاویر و سایدبار ──────────────────────────────── -->
+        <div class="col-lg-4">
+            <div class="admin-table-card p-4 mb-4">
+                <h5 style="color:var(--blue-deep);margin-bottom:1.5rem">🖼️ تصاویر</h5>
+
+                <!-- لوگو -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">لوگو سایت</label>
+                    @if (!string.IsNullOrEmpty(Model?.Logo))
+                    {
+                        <div class="mb-2"><img src="@Model.Logo" style="height:50px" alt="لوگو"></div>
+                    }
+                    <input type="file" name="logoFile" class="form-control" accept="image/*"
+                           onchange="previewImage(this, 'logoPreview')">
+                    <img id="logoPreview" style="height:50px;margin-top:8px;display:none">
+                </div>
+
+                <!-- تصویر Hero -->
+                <div>
+                    <label class="form-label fw-bold">تصویر Hero</label>
+                    @if (!string.IsNullOrEmpty(Model?.HeroImageUrl))
+                    {
+                        <div class="mb-2"><img src="@Model.HeroImageUrl" style="width:100%;border-radius:8px;max-height:120px;object-fit:cover" alt="Hero"></div>
+                    }
+                    <input type="file" name="heroImageFile" class="form-control" accept="image/*"
+                           onchange="previewImage(this, 'heroPreview')">
+                    <img id="heroPreview" style="width:100%;border-radius:8px;margin-top:8px;max-height:120px;object-fit:cover;display:none">
+                </div>
+            </div>
+
+            <div class="admin-table-card p-4">
+                <h5 style="color:var(--blue-deep);margin-bottom:1.5rem">⚙️ سایر تنظیمات</h5>
+                <div class="form-check mb-3">
+                    <input asp-for="IsMaintenanceMode" class="form-check-input" type="checkbox">
+                    <label asp-for="IsMaintenanceMode" class="form-check-label">حالت تعمیر و نگهداری</label>
+                </div>
+                <small style="color:var(--text-light)">در حالت تعمیر، سایت برای کاربران غیرقابل دسترس می‌شود</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button class="btn-primary-custom" type="submit">💾 ذخیره تنظیمات</button>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+function previewImage(input, imgId) {
+    const img = document.getElementById(imgId);
+    if (input.files?.[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+}

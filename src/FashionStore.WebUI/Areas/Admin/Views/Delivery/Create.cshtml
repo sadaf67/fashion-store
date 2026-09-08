@@ -1,0 +1,45 @@
+@using FashionStore.Domain.Entities
+@model DeliveryZone
+@{
+    ViewData["Title"] = "افزودن محدوده پیک";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div style="max-width:600px">
+    <div class="admin-table-card p-4">
+        <h5 style="color:var(--blue-deep);margin-bottom:1.5rem">🚚 تعریف محدوده جدید پیک</h5>
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label class="form-label fw-bold">نام محدوده</label>
+                <input asp-for="Name" class="form-control" placeholder="مثلاً: تهران - منطقه 1" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">توضیحات</label>
+                <textarea asp-for="Description" class="form-control" rows="2" placeholder="اختیاری"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <label class="form-label fw-bold">هزینه ارسال (تومان)</label>
+                    <input asp-for="DeliveryFee" type="number" class="form-control" required>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label fw-bold">زمان تحویل (روز)</label>
+                    <input asp-for="EstimatedDays" type="number" class="form-control" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">محدوده پوشش (توضیح متنی)</label>
+                <textarea asp-for="CoverageArea" class="form-control" rows="3"
+                          placeholder="مثلاً: تمام خیابان‌های منطقه 1 تهران شامل: الهیه، نیاوران و..."></textarea>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
+                <label asp-for="IsActive" class="form-check-label">محدوده فعال باشد</label>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn-primary-custom" type="submit">ذخیره محدوده</button>
+                <a asp-action="Index" class="btn-outline-custom" style="color:var(--text-dark);border-color:var(--cream-dark)">انصراف</a>
+            </div>
+        </form>
+    </div>
+</div>

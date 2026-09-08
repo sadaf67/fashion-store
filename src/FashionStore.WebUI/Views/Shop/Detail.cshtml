@@ -1,0 +1,298 @@
+@using FashionStore.Domain.Entities
+@model Product
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var primaryImage = Model.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? Model.Images?.FirstOrDefault()?.ImageUrl;
+    var hasDiscount = Model.DiscountedPrice.HasValue && Model.DiscountedPrice < Model.Price;
+}
+
+<div style="padding:2rem 0">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav class="mb-4"><ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">خانه</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Shop" asp-action="Index">فروشگاه</a></li>
+            <li class="breadcrumb-item active">@Model.Name</li>
+        </ol></nav>
+
+        <div class="row g-5">
+            <!-- ─── گالری تصاویر ──────────────────────────────────── -->
+            <div class="col-lg-5">
+                <div class="product-gallery">
+                    <div class="main-image">
+                        <img src="@(primaryImage ?? "/img/placeholder.png")" alt="@Model.Name" id="mainImg">
+                    </div>
+                    @if (Model.Images?.Count > 1)
+                    {
+                        <div class="thumb-list">
+                            @foreach (var img in Model.Images)
+                            {
+                                <div class="thumb @(img.IsPrimary ? "active" : "")" onclick="changeImg('@img.ImageUrl', this)">
+                                    <img src="@img.ImageUrl" alt="">
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ─── اطلاعات محصول ────────────────────────────────── -->
+            <div class="col-lg-7">
+                @if (!string.IsNullOrEmpty(Model.Brand))
+                {
+                    <div style="color:var(--blue-dark);font-weight:600;margin-bottom:0.5rem">@Model.Brand</div>
+                }
+                <h1 style="font-size:1.8rem;margin-bottom:1rem">@Model.Name</h1>
+
+                @if (!string.IsNullOrEmpty(Model.ShortDescription))
+                {
+                    <p style="color:var(--text-mid);margin-bottom:1.5rem">@Model.ShortDescription</p>
+                }
+
+                <!-- قیمت -->
+                <div class="mb-4" style="background:var(--cream);padding:1.2rem;border-radius:12px">
+                    @if (hasDiscount)
+                    {
+                        var pct = (int)((1 - Model.DiscountedPrice!.Value / Model.Price) * 100);
+                        <div class="d-flex align-items-center gap-3">
+                            <span style="font-size:1.8rem;font-weight:800;color:var(--blue-deep)">
+                                @Model.DiscountedPrice.Value.ToString("N0") تومان
+                            </span>
+                            <span class="badge-discount" style="font-size:1rem">@pct% تخفیف</span>
+                        </div>
+                        <div style="color:var(--text-light);text-decoration:line-through;font-size:1rem">
+                            @Model.Price.ToString("N0") تومان
+                        </div>
+                    }
+                    else
+                    {
+                        <span style="font-size:1.8rem;font-weight:800;color:var(--blue-deep)">
+                            @Model.Price.ToString("N0") تومان
+                        </span>
+                    }
+                </div>
+
+                <!-- انتخاب سایز -->
+                @if (Model.Variants?.Any() == true)
+                {
+                    var sizes = Model.Variants.Select(v => v.Size).Distinct().ToList();
+                    var colors = Model.Variants.Where(v => !string.IsNullOrEmpty(v.Color)).Select(v => new { v.Color, v.ColorHex }).DistinctBy(x => x.Color).ToList();
+
+                    @if (sizes.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">سایز: <span id="selectedSize" style="color:var(--blue-dark)">انتخاب کنید</span></label>
+                            <div>
+                                @foreach (var s in sizes)
+                                {
+                                    <span class="size-option" onclick="selectSize('@s', this)">@s</span>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (colors.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">رنگ: <span id="selectedColor" style="color:var(--blue-dark)">انتخاب کنید</span></label>
+                            <div>
+                                @foreach (var c in colors)
+                                {
+                                    <span class="color-swatch" style="background:@(c.ColorHex ?? "#ccc")"
+                                          title="@c.Color" onclick="selectColor('@c.Color', this)"></span>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                <!-- تعداد + افزودن به سبد -->
+                <div class="d-flex gap-3 align-items-center mb-4">
+                    <div class="d-flex align-items-center gap-2" style="background:var(--cream-dark);border-radius:10px;padding:5px 15px">
+                        <button onclick="changeQty(-1)" style="background:none;border:none;font-size:1.2rem;cursor:pointer">−</button>
+                        <input type="number" id="qty" value="1" min="1" max="99"
+                               style="width:40px;text-align:center;border:none;background:transparent;font-size:1rem">
+                        <button onclick="changeQty(1)" style="background:none;border:none;font-size:1.2rem;cursor:pointer">+</button>
+                    </div>
+                    <button onclick="addToCart()" class="btn-primary-custom flex-1" style="flex:1">
+                        🛒 افزودن به سبد خرید
+                    </button>
+                </div>
+
+                <!-- پرو آنلاین -->
+                @if (Model.IsTryOnEnabled)
+                {
+                    <div class="mb-4">
+                        <button onclick="toggleTryOn()" id="tryOnBtn"
+                                class="btn-blue w-100" style="font-size:1rem">
+                            📷 پرو آنلاین این لباس
+                        </button>
+                    </div>
+                }
+
+                <!-- تگ‌ها -->
+                @if (!string.IsNullOrEmpty(Model.Tags))
+                {
+                    <div>
+                        @foreach (var tag in Model.Tags.Split(','))
+                        {
+                            <span style="background:var(--cream-dark);border-radius:20px;padding:3px 10px;font-size:0.8rem;margin:2px;display:inline-block">
+                                #@tag.Trim()
+                            </span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- ─── پرو آنلاین (دوربین) ──────────────────────────── -->
+        @if (Model.IsTryOnEnabled)
+        {
+            <div id="tryOnSection" style="display:none;margin-top:3rem">
+                <div class="tryon-container">
+                    <div class="tryon-badge">📷 پرو آنلاین - Virtual Try-On</div>
+                    <h4 class="mb-3">@Model.Name را روی خودتان ببینید</h4>
+                    <p style="color:var(--blue-light);font-size:0.9rem;margin-bottom:1.5rem">
+                        دوربین شما فعال می‌شود و لباس روی بدن شما نمایش داده می‌شود
+                    </p>
+                    <div class="tryon-canvas-wrapper">
+                        <video id="webcamVideo" autoplay muted playsinline></video>
+                        <canvas id="tryonCanvas"></canvas>
+                    </div>
+                    <div class="tryon-controls">
+                        <button onclick="captureSnapshot()" class="btn-primary-custom">📸 گرفتن عکس</button>
+                        <button onclick="stopTryOn(); document.getElementById('tryOnSection').style.display='none'" class="btn-outline-custom">✕ بستن</button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- ─── توضیحات کامل ──────────────────────────────────── -->
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <div style="margin-top:3rem;background:var(--white);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow-sm)">
+                <h4 style="color:var(--blue-deep);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid var(--cream-dark)">
+                    📋 توضیحات محصول
+                </h4>
+                <div style="color:var(--text-mid);line-height:2">@Html.Raw(Model.Description)</div>
+            </div>
+        }
+
+        <!-- ─── محصولات مشابه ─────────────────────────────────── -->
+        @if (ViewBag.RelatedProducts != null)
+        {
+            <div style="margin-top:3rem">
+                <div class="section-title">
+                    <h2 style="font-size:1.5rem">محصولات مشابه</h2>
+                    <div class="divider"></div>
+                </div>
+                <div class="row g-3">
+                    @foreach (Product p in ViewBag.RelatedProducts)
+                    {
+                        var pi = p.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? p.Images?.FirstOrDefault()?.ImageUrl;
+                        <div class="col-6 col-md-3">
+                            <div class="product-card">
+                                <div class="product-img-wrapper" style="aspect-ratio:1">
+                                    @if (!string.IsNullOrEmpty((string?)pi))
+                                    {
+                                        <img src="@pi" alt="@p.Name">
+                                    }
+                                    else
+                                    {
+                                        <div style="width:100%;height:100%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:2rem">👗</div>
+                                    }
+                                </div>
+                                <div class="product-body">
+                                    <h5>@p.Name</h5>
+                                    <div class="price-current">@p.Price.ToString("N0") تومان</div>
+                                    <a asp-action="Detail" asp-route-id="@p.Id" class="btn-blue w-100 mt-2 text-center" style="display:block;font-size:0.85rem">مشاهده</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const productId = @Model.Id;
+let selectedVariantId = null;
+let selectedSize = null;
+let selectedColor = null;
+const variants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.Variants ?? []).Select(v => new { id = v.Id, size = v.Size, color = v.Color, stock = v.StockQuantity })));
+
+function resolveVariant() {
+    if (!variants.length) return true;
+    const match = variants.find(v => (!selectedSize || v.size === selectedSize) && (!selectedColor || v.color === selectedColor));
+    selectedVariantId = match?.id ?? null;
+    const status = document.getElementById('variantStatus');
+    if (status) {
+        status.textContent = !selectedSize || !selectedColor ? 'لطفاً سایز و رنگ را انتخاب کنید' : match && match.stock > 0 ? `${match.stock} عدد موجود` : 'این ترکیب موجود نیست';
+        status.className = match && match.stock > 0 ? 'text-success small' : 'text-danger small';
+    }
+    return Boolean(match && match.stock > 0);
+}
+
+function changeImg(url, el) {
+    document.getElementById('mainImg').src = url;
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function selectSize(size, el) {
+    selectedSize = size;
+    document.querySelectorAll('.size-option').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('selectedSize').textContent = size;
+    resolveVariant();
+}
+
+function selectColor(color, el) {
+    selectedColor = color;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('selectedColor') && (document.getElementById('selectedColor').textContent = color);
+    resolveVariant();
+}
+
+function changeQty(delta) {
+    const q = document.getElementById('qty');
+    q.value = Math.max(1, Math.min(99, parseInt(q.value || 1) + delta));
+}
+
+async function addToCart() {
+    if (variants.length && !resolveVariant()) {
+        showToast('ابتدا ترکیب موجود سایز و رنگ را انتخاب کنید', 'error');
+        return;
+    }
+    const qty = parseInt(document.getElementById('qty').value);
+    const form = new FormData();
+    form.append('productId', productId);
+    form.append('quantity', qty);
+    if (selectedVariantId) form.append('variantId', selectedVariantId);
+    const res = await fetch('/Cart/Add', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById('cartCount').textContent = data.cartCount;
+        showToast(data.message, 'success');
+    } else showToast(data.message || 'افزودن به سبد انجام نشد', 'error');
+}
+
+function toggleTryOn() {
+    const section = document.getElementById('tryOnSection');
+    const isVisible = section.style.display !== 'none';
+    section.style.display = isVisible ? 'none' : 'block';
+    if (!isVisible) {
+        section.scrollIntoView({ behavior: 'smooth' });
+        const overlayUrl = '@(Model.TryOnOverlayImageUrl ?? primaryImage ?? "")';
+        startTryOn(overlayUrl);
+    } else {
+        stopTryOn();
+    }
+}
+</script>
+}
